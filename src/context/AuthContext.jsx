@@ -1,0 +1,160 @@
+import React, { useContext, useState, useEffect, createContext } from 'react';
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  GoogleAuthProvider,
+  signInWithPopup,
+} from 'firebase/auth';
+import { auth, db } from '../config/firebase';
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  setDoc,
+  getDoc,
+  doc,
+} from 'firebase/firestore';
+const AuthContext = createContext();
+
+// Custom hook to access AuthContext
+export const useAuth = () => {
+  return useContext(AuthContext);
+};
+
+export const AuthProvider = ({ children }) => {
+  const [currentUser, setCurrentUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [loader, setLoader] = useState(false);
+  const [password, setPassword] = useState();
+  const [email, setEmail] = useState('');
+  const [authErr, setAuthError] = useState('');
+  const [step, setStep] = useState(0);
+  const googleSignIn = async () => {
+    const provider = new GoogleAuthProvider();
+    try {
+      const result = await signInWithPopup(auth, provider); // Google sign-in
+      const user = result.user;
+
+      if (user) {
+        const { displayName, email, uid, photoURL } = user;
+        const createdAt = new Date(); // Current date
+
+        // Reference to Firestore document for the user
+        const userDocRef = doc(db, 'users', uid);
+        const userDocSnap = await getDoc(userDocRef);
+
+        // If user does not exist in Firestore, add the new user document
+        if (!userDocSnap.exists()) {
+          await setDoc(userDocRef, {
+            fullName: displayName,
+            email,
+            createdAt,
+            photoUrl: photoURL,
+            userId: uid, // Store the Firebase Auth UID as userId
+          });
+        }
+
+        setCurrentUser(user); // Update the currentUser state with the authenticated user
+      }
+    } catch (error) {
+      console.error('Error during Google Sign-In', error); // Handle sign-in errors
+    }
+  };
+
+  // Listen to authentication state changes
+  useEffect(() => {
+    console.log('L', loader);
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setCurrentUser(user);
+      setTimeout(() => {
+        setLoading(false);
+      }, 500);
+    });
+    return unsubscribe;
+  }, []);
+
+  // Function to check if email exists
+  // Function to check if email exists using fetchSignInMethodsForEmail
+  const isEmailAlreadyInUse = async (email) => {
+    setLoader(true);
+    try {
+      const usersCollection = collection(db, 'users');
+      //   Create a query to find the user with the given email
+      const q = query(usersCollection, where('email', '==', email));
+      //   Execute the query
+      const querySnapshot = await getDocs(q);
+      if (!querySnapshot.empty) {
+        console.log('User with this email exists.');
+        return true; // Email found
+      } else {
+        console.log('No user found with this email.');
+        return false; // Email not found
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+    }
+    // setLoading(false);
+    console.log('test');
+  };
+  // Modified signup function that checks if the email already exists
+  const signup = async () => {
+    console.log(email, password);
+    console.log('mail', email);
+    console.log('pass', password);
+    // const emailExists = await isEmailAlreadyInUse(email);
+
+    // if (emailExists) {
+    //
+    // }
+    try {
+      if (!email || !password) {
+        setAuthError('No Email or Password!');
+        return;
+        //   throw new Error('No Email');
+      } else {
+        console.log('test?');
+        // return createUserWithEmailAndPassword(auth, email, password);
+      }
+    } catch (error) {
+      console.log(error.code);
+      setAuthError(error.code);
+    }
+
+    // If the email is not in use, proceed with creating a new user
+  };
+
+  const login = (email, password) => {
+    return signInWithEmailAndPassword(auth, email, password);
+  };
+
+  const logout = () => {
+    return signOut(auth);
+  };
+
+  const value = {
+    currentUser,
+    signup,
+    login,
+    logout,
+    isEmailAlreadyInUse,
+    loading,
+    loader,
+    setLoader,
+    email,
+    setEmail,
+    password,
+    setPassword,
+    authErr,
+    setAuthError,
+    step,
+    setStep,
+    googleSignIn,
+  };
+
+  // Provide the auth context only when loading is done
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
