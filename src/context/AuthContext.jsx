@@ -16,6 +16,8 @@ import {
   setDoc,
   getDoc,
   doc,
+  addDoc,
+  updateDoc,
 } from 'firebase/firestore';
 const AuthContext = createContext();
 
@@ -55,6 +57,20 @@ export const AuthProvider = ({ children }) => {
             photoUrl: photoURL,
             userId: uid, // Store the Firebase Auth UID as userId
           });
+          const accountsCollectionRef = collection(userDocRef, 'accounts');
+
+          // Create default account
+          const docRef = await addDoc(accountsCollectionRef, {
+            id: 1,
+            name: 'Main Account',
+            balance: 0,
+            type: 'Chequing',
+            currency: 'CAD',
+            createdAt, // Store the creation date
+          });
+
+          // Update the document with its own ID
+          await updateDoc(docRef, { documentId: docRef.id });
         }
 
         setCurrentUser(user); // Update the currentUser state with the authenticated user
@@ -135,6 +151,80 @@ export const AuthProvider = ({ children }) => {
     return signOut(auth);
   };
 
+  const [accounts, setAccounts] = useState();
+  const [total, setTotal] = useState();
+  useEffect(() => {
+    if (!currentUser) return;
+    setLoading(true);
+    const userId = currentUser.uid;
+
+    const fetchAccounts = async () => {
+      try {
+        setLoading(true);
+        const accountsRef = collection(db, 'users', userId, 'accounts');
+        const querySnapshot = await getDocs(accountsRef);
+
+        if (querySnapshot.empty) {
+          setAccounts([]);
+        } else {
+          const accountsData = querySnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
+          let totalAmount = 0;
+          accountsData.forEach((account) => {
+            totalAmount += account.balance;
+          });
+          setTotal(totalAmount);
+
+          // setTotal(totalAmount);
+          console.log('DATA', accountsData);
+          setAccounts(accountsData);
+        }
+      } catch (error) {
+        console.error('Error fetching accounts:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAccounts();
+  }, [currentUser]);
+  const [balance, setBalance] = useState(0);
+  const [balanceSavings, setBalanceSavings] = useState(0);
+  const [balanceChequing, setBalanceChequing] = useState(0);
+
+  useEffect(() => {
+    if (accounts) {
+      let totalAmount = 0;
+      accounts.forEach((account) => {
+        totalAmount += account.balance;
+      });
+      setBalance(totalAmount);
+      const getTotalSavingsBalance = (accounts) => {
+        return accounts
+          .filter((account) => account.savings) // Filter accounts with savings = true
+          .reduce((total, account) => total + account.balance, 0); // Sum their balances
+      };
+
+      // Example usage:
+      const totalSavings = getTotalSavingsBalance(accounts);
+      setBalanceSavings(totalSavings);
+
+      const getTotalChequingBalance = (accounts) => {
+        return accounts
+          .filter((account) => account.chequing) // Filter accounts with savings = true
+          .reduce((total, account) => total + account.balance, 0); // Sum their balances
+      };
+
+      // Example usage:
+      const totalChequing = getTotalChequingBalance(accounts);
+      setBalanceChequing(totalChequing);
+
+      console.log('accounts');
+    }
+  }, [accounts]);
+
   const value = {
     currentUser,
     signup,
@@ -153,6 +243,15 @@ export const AuthProvider = ({ children }) => {
     step,
     setStep,
     googleSignIn,
+    accounts,
+    setAccounts,
+    total,
+    setTotal,
+    balanceSavings,
+    setBalanceSavings,
+    balance,
+    setBalance,
+    balanceChequing,
   };
 
   // Provide the auth context only when loading is done

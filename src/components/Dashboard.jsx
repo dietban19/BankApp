@@ -3,6 +3,7 @@ import { collection, query, getDocs, addDoc } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
 import { db } from '../config/firebase';
 import { useNavigate } from 'react-router-dom';
+import Tabs from './Tabs';
 
 const AccountList = ({ accounts, onAccountClick }) => {
   if (accounts.length === 0) {
@@ -22,7 +23,7 @@ const AccountList = ({ accounts, onAccountClick }) => {
           <h3 className="text-lg font-semibold text-green-800">
             {account.name}
           </h3>
-          <p className="text-gray-700">Balance: {account.balance}</p>
+          <p className="text-gray-700">Balance: ${account.balance}</p>
         </div>
       ))}
     </div>
@@ -32,6 +33,7 @@ const AccountList = ({ accounts, onAccountClick }) => {
 function Dashboard() {
   const [accounts, setAccounts] = useState([]);
   const [newAccountName, setNewAccountName] = useState('');
+  const [total, setTotal] = useState(0);
   const { currentUser } = useAuth();
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -54,6 +56,12 @@ function Dashboard() {
             id: doc.id,
             ...doc.data(),
           }));
+          let totalAmount = 0;
+          accountsData.forEach((account) => {
+            totalAmount += account.balance;
+          });
+          setTotal(totalAmount);
+
           setAccounts(accountsData);
         }
       } catch (error) {
@@ -78,7 +86,7 @@ function Dashboard() {
       const accountsRef = collection(db, 'users', userId, 'accounts');
       const newAccount = {
         name: newAccountName,
-        balance: '$0.00',
+        balance: 0,
       };
 
       const docRef = await addDoc(accountsRef, newAccount);
@@ -101,6 +109,10 @@ function Dashboard() {
         </h1>
         <div className="bg-white shadow rounded-lg p-4">
           <h2 className="text-lg font-bold text-green-800 mb-4">My Accounts</h2>
+          <div className="p-1 pb-8 flex justify-between">
+            <div className="text-xl font-bold">Total:</div>{' '}
+            <div className="text-xl">${total.toFixed(2)}</div>
+          </div>
           {loading ? (
             <p className="text-gray-500 text-center">Loading accounts...</p>
           ) : (
@@ -126,6 +138,7 @@ function Dashboard() {
           </div>
         </div>
       </div>
+      <Tabs />
     </div>
   );
 }

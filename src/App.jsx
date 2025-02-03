@@ -1,10 +1,11 @@
 import React from 'react';
 import Accounts from './components/Accounts';
-import Dashboard from './components/Dashboard';
+import Dashboard from './pages/Dashboard/Dashboard';
 import { useAuth } from './context/AuthContext';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import Auth from './pages/Auth';
 import AccountDetails from './pages/AccountDetails';
+import Budget from './pages/Budget/Budget';
 
 function App() {
   const { currentUser, loading } = useAuth();
@@ -20,7 +21,7 @@ function App() {
     );
   }
   return (
-    <div>
+    <div className="">
       <Routes>
         <Route
           path="/"
@@ -47,10 +48,11 @@ function App() {
         {currentUser && (
           <>
             <Route path="/account/:accountId" element={<AccountDetails />} />
+            <Route path="/budget" element={<Budget />} />
           </>
         )}
       </Routes>
-      <Dashboard />
+      {/* <Dashboard /> */}
     </div>
   );
 }

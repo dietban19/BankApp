@@ -6,15 +6,17 @@ const AddFundsModal = ({
   amount,
   setAmount,
   handleAddFunds,
+  incomeTypes,
+  selectedIncomeType,
+  setSelectedIncomeType,
 }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-gray-800 bg-opacity-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white w-full max-w-sm rounded-lg shadow-lg p-6">
-        <h2 className="text-lg font-bold text-gray-800 mb-4">Add Funds</h2>
+        <h2 className="text-lg font-bold mb-4">Add Funds</h2>
 
-        {/* Input for amount */}
         <input
           type="number"
           value={amount}
@@ -23,17 +25,29 @@ const AddFundsModal = ({
           className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-green-600 focus:outline-none mb-4"
         />
 
-        {/* Action Buttons */}
-        <div className="flex justify-between items-center">
+        <select
+          value={selectedIncomeType}
+          onChange={(e) => setSelectedIncomeType(e.target.value)}
+          className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-green-600 focus:outline-none mb-4"
+        >
+          <option value="">Select Income Type</option>
+          {incomeTypes.map((income, index) => (
+            <option key={index} value={income.name}>
+              {income}
+            </option>
+          ))}
+        </select>
+
+        <div className="flex justify-between">
           <button
-            onClick={handleAddFunds}
-            className="w-full bg-green-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-green-700 transition"
+            onClick={() => handleAddFunds(selectedIncomeType)}
+            className="bg-green-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-green-700 transition"
           >
-            Confirm
+            Add
           </button>
           <button
             onClick={onClose}
-            className="ml-4 w-full bg-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-400 transition"
+            className="bg-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-400 transition"
           >
             Cancel
           </button>
