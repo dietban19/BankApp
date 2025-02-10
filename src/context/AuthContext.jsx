@@ -82,7 +82,6 @@ export const AuthProvider = ({ children }) => {
 
   // Listen to authentication state changes
   useEffect(() => {
-    console.log('L', loader);
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
       setTimeout(() => {
@@ -114,13 +113,11 @@ export const AuthProvider = ({ children }) => {
     } finally {
     }
     // setLoading(false);
-    console.log('test');
   };
   // Modified signup function that checks if the email already exists
   const signup = async () => {
     console.log(email, password);
-    console.log('mail', email);
-    console.log('pass', password);
+
     // const emailExists = await isEmailAlreadyInUse(email);
 
     // if (emailExists) {
@@ -132,11 +129,9 @@ export const AuthProvider = ({ children }) => {
         return;
         //   throw new Error('No Email');
       } else {
-        console.log('test?');
         // return createUserWithEmailAndPassword(auth, email, password);
       }
     } catch (error) {
-      console.log(error.code);
       setAuthError(error.code);
     }
 
@@ -178,11 +173,9 @@ export const AuthProvider = ({ children }) => {
           setTotal(totalAmount);
 
           // setTotal(totalAmount);
-          console.log('DATA', accountsData);
           setAccounts(accountsData);
         }
       } catch (error) {
-        console.error('Error fetching accounts:', error);
       } finally {
         setLoading(false);
       }
@@ -220,8 +213,6 @@ export const AuthProvider = ({ children }) => {
       // Example usage:
       const totalChequing = getTotalChequingBalance(accounts);
       setBalanceChequing(totalChequing);
-
-      console.log('accounts');
     }
   }, [accounts]);
 
