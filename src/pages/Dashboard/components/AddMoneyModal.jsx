@@ -20,26 +20,23 @@ const AddMoneyModal = ({ modalOpen, setModalOpen }) => {
   const [description, setDescription] = useState('');
   const [type, setType] = useState('Choose Type');
   const [index, setIndex] = useState();
+  const [isIncome, setIsIncome] = useState(true);
   const moneyTypes = ['Income', 'Expense', 'Transfer'];
-  console.log(accounts);
-  const handleAddMoney = async (index) => {
+  const { currentUser } = useAuth();
+  const handleAddMoney = async () => {
     if (!amount || !description) return;
-
+    console.log(accounts);
+    const mainAcc = accounts.find((account) => {
+      return account.main;
+    });
+    const index = accounts.findIndex((account) => {
+      return account.main;
+    });
+    const type = mainAcc;
     try {
-      const auth = getAuth();
-      const user = auth.currentUser;
+      const user = currentUser;
       if (!user) return;
 
-      //   const transactionsRef = collection(db, 'transactions');
-      //   const newTransactionRef = await addDoc(transactionsRef, {
-      //     userId: user.uid,
-      //     amount: parseFloat(amount),
-      //     description,
-      //     type,
-      //     createdAt: new Date(),
-      //   });
-
-      // Reference the user's account using type.docId
       console.log(type);
       const accountRef = doc(
         db,
@@ -49,17 +46,15 @@ const AddMoneyModal = ({ modalOpen, setModalOpen }) => {
         type.documentId,
       );
       console.log(type);
-      //   // Update the account balance
       const newData = {
         amount: parseFloat(amount),
         description: description,
         type: type.type,
-        date: new Date().toISOString(), // Add timestamp for tracking
-        // type: 'deposit',
-        transactionType: 'deposit',
+        date: new Date().toISOString(),
+        transactionType: isIncome ? 'deposit' : 'withdrawal',
       };
       await updateDoc(accountRef, {
-        balance: increment(parseFloat(amount)), // Increment the balance
+        balance: increment(isIncome ? parseFloat(amount) : -parseFloat(amount)),
       });
       const transactionsRef = collection(
         db,
@@ -70,18 +65,21 @@ const AddMoneyModal = ({ modalOpen, setModalOpen }) => {
         'transactions',
       );
       const docRef = await addDoc(transactionsRef, newData);
-      // Update the document with its own ID
-      await updateDoc(docRef, { documentId: docRef.id });
+      await updateDoc(docRef, {
+        documentId: docRef.id,
+        income: true,
+      });
 
       setAccounts((prevData) => {
-        const newData = [...prevData]; // Create a new array copy
+        const newData = [...prevData];
         const prevBalance = newData[index].balance;
-        console.log('PREVAL', newData[index].balance);
+        console.log(prevBalance);
         newData[index] = {
           ...newData[index],
           balance: parseFloat(prevBalance) + parseFloat(amount),
-        }; // Modify index 1
-        return newData; // Update state
+        };
+        console.log(newData);
+        return newData;
       });
       setAmount('');
       setDescription('');
@@ -111,28 +109,20 @@ const AddMoneyModal = ({ modalOpen, setModalOpen }) => {
             exit={{ y: 50, opacity: 0 }}
             transition={{ duration: 0.3, ease: 'easeOut' }}
           >
-            {/* Header */}
             <div className="flex items-center mb-6 relative">
-              {/* Close Button (Left-Aligned) */}
               <button
                 className="text-gray-500 hover:text-gray-700 transition absolute left-0"
                 onClick={() => setModalOpen(false)}
               >
                 <FaArrowLeft />
               </button>
-
-              {/* Centered Title */}
               <h2 className="text-lg font-semibold text-gray-900 flex-1 text-center">
                 Add Money
               </h2>
             </div>
-
-            {/* Description */}
             <p className="text-gray-600 text-sm mb-4">
               Enter the details of the money transaction below.
             </p>
-
-            {/* Amount Input */}
             <label className="block text-[0.75rem] font-medium text-gray-600">
               Amount
             </label>
@@ -143,8 +133,6 @@ const AddMoneyModal = ({ modalOpen, setModalOpen }) => {
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
             />
-
-            {/* Description Input */}
             <label className="block text-[0.75rem] font-medium text-gray-600 mt-4">
               Description
             </label>
@@ -155,43 +143,31 @@ const AddMoneyModal = ({ modalOpen, setModalOpen }) => {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
-
-            {/* Type Dropdown */}
-            <label className="block text-[0.75rem] font-medium text-gray-600 mt-4">
-              Type
-            </label>
-            <select
-              className="text-[0.75rem] w-full mt-1 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500"
-              value={
-                type == 'Choose Type' ? 'Choose Type' : JSON.stringify(type)
-              }
-              onChange={(e) => {
-                console.log('INITIAL', e.target.value);
-                if (e.target.value === 'Choose Type') {
-                  setType('Choose Type');
-                  setIndex(null);
-                } else {
-                  const selectedAccount = JSON.parse(e.target.value);
-                  setType(selectedAccount);
-                  setIndex(
-                    accounts.findIndex(
-                      (acc) => acc.documentId === selectedAccount.documentId,
-                    ),
-                  );
-                }
-              }}
-            >
-              <option value="Choose Type" disabled>
-                Choose Type
-              </option>
-              {accounts.map((option, ind) => (
-                <option key={ind} value={JSON.stringify(option)}>
-                  {option.name}
-                </option>
-              ))}
-            </select>
-
-            {/* Add Button */}
+            <div className="mt-4">
+              <label className="block text-[0.75rem] font-medium text-gray-600">
+                Transaction Type
+              </label>
+              <div className="flex gap-4 mt-2">
+                <label>
+                  <input
+                    type="radio"
+                    value="income"
+                    checked={isIncome}
+                    onChange={() => setIsIncome(true)}
+                  />{' '}
+                  Income
+                </label>
+                <label>
+                  <input
+                    type="radio"
+                    value="expense"
+                    checked={!isIncome}
+                    onChange={() => setIsIncome(false)}
+                  />{' '}
+                  Expense
+                </label>
+              </div>
+            </div>
             <button
               className="w-full mt-6 p-3 bg-green-500 text-white rounded-md flex items-center justify-center gap-2 hover:bg-green-600 transition text-[0.75rem]"
               onClick={() => handleAddMoney(index)}

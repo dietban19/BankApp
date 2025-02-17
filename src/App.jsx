@@ -6,10 +6,11 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import Auth from './pages/Auth';
 import AccountDetails from './pages/AccountDetails';
 import Budget from './pages/Budget/Budget';
+import BankAccount from './pages/AccountDetails/BankAccount';
+import Settings from './pages/Settings/Settings';
 
 function App() {
   const { currentUser, loading } = useAuth();
-  console.log(currentUser);
 
   if (loading) {
     return (
@@ -24,7 +25,7 @@ function App() {
     <div className="">
       <Routes>
         <Route
-          path="/"
+          path="*"
           element={
             currentUser ? (
               <Navigate to="/dashboard" />
@@ -47,8 +48,9 @@ function App() {
         />
         {currentUser && (
           <>
-            <Route path="/account/:accountId" element={<AccountDetails />} />
+            <Route path="/account/:accountId" element={<BankAccount />} />
             <Route path="/budget" element={<Budget />} />
+            <Route path="/settings" element={<Settings />} />
           </>
         )}
       </Routes>

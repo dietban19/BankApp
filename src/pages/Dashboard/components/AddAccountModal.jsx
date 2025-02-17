@@ -14,7 +14,7 @@ const categories = [
   'Emergency',
 ];
 const currencies = ['USD', 'EUR', 'GBP', 'CAD', 'AUD'];
-
+const accountTypes = ['Chequing', 'Savings', 'Travel'];
 const AddAccountModal = ({ modalOpen, setModalOpen, setAccounts }) => {
   const [step, setStep] = useState(1);
   const [accountName, setAccountName] = useState('');
@@ -24,7 +24,7 @@ const AddAccountModal = ({ modalOpen, setModalOpen, setAccounts }) => {
   const [monthlyLimit, setMonthlyLimit] = useState('');
   const [selectedCurrency, setSelectedCurrency] = useState('USD');
   const [description, setDescription] = useState('');
-
+  const [accType, setAccType] = useState('Chequing');
   const nextStep = () => setStep(step + 1);
   const prevStep = () => setStep(step - 1);
 
@@ -42,30 +42,29 @@ const AddAccountModal = ({ modalOpen, setModalOpen, setAccounts }) => {
       alert('User not authenticated.');
       return;
     }
+    const isChequing = accType == 'Chequing';
+    const isSavings = accType == 'Savings';
+    const isTravel = accType == 'Travel';
 
     const newAccount = {
-      id: Date.now(), // Unique ID
+      id: Date.now(),
       name: accountName,
       type: customCategory || selectedCategory,
+      chequing: isChequing,
+      savings: isSavings,
+      travel: isTravel,
       balance: parseFloat(startingBalance) || 0,
       monthlyLimit: parseFloat(monthlyLimit) || 0,
       currency: selectedCurrency,
-      description: description,
+      description,
       createdAt: new Date(),
     };
 
     try {
-      // Reference to the user's "accounts" subcollection in Firestore
       const accountsRef = collection(db, 'users', user.uid, 'accounts');
       const docRef = await addDoc(accountsRef, newAccount);
-
-      // Update the document with its own ID
       await updateDoc(docRef, { documentId: docRef.id });
-
-      // Update local state (if needed)
       setAccounts((prev) => [...prev, newAccount]);
-
-      // Reset form and close modal
       setAccountName('');
       setSelectedCategory('');
       setCustomCategory('');
@@ -73,14 +72,15 @@ const AddAccountModal = ({ modalOpen, setModalOpen, setAccounts }) => {
       setMonthlyLimit('');
       setSelectedCurrency('USD');
       setDescription('');
+      setAccType('Chequing');
       setModalOpen(false);
-
       alert('Account added successfully!');
     } catch (error) {
       console.error('Error adding account:', error);
       alert('Failed to add account. Please try again.');
     }
   }
+
   console.log(modalOpen);
   return (
     <AnimatePresence>
@@ -125,12 +125,7 @@ const AddAccountModal = ({ modalOpen, setModalOpen, setAccounts }) => {
 
             {/* Step 1: Account Name & Type */}
             {step === 1 && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.3 }}
-              >
+              <motion.div>
                 <p className="text-gray-600 mb-4">
                   First, let's name your account and select its type.
                 </p>
@@ -139,7 +134,7 @@ const AddAccountModal = ({ modalOpen, setModalOpen, setAccounts }) => {
                 </label>
                 <input
                   type="text"
-                  className="w-full mt-1 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500"
+                  className="w-full mt-1 p-3 border border-gray-300 rounded-md"
                   placeholder="Enter account name"
                   value={accountName}
                   onChange={(e) => setAccountName(e.target.value)}
@@ -152,10 +147,10 @@ const AddAccountModal = ({ modalOpen, setModalOpen, setAccounts }) => {
                   {categories.map((category) => (
                     <button
                       key={category}
-                      className={`px-4 py-2 rounded-md text-sm font-medium transition whitespace-nowrap ${
+                      className={`px-4 py-2 rounded-md text-sm font-medium ${
                         selectedCategory === category
-                          ? 'bg-green-500 text-white shadow-md'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          ? 'bg-green-500 text-white'
+                          : 'bg-gray-100 text-gray-700'
                       }`}
                       onClick={() => {
                         setSelectedCategory(category);
@@ -166,10 +161,9 @@ const AddAccountModal = ({ modalOpen, setModalOpen, setAccounts }) => {
                     </button>
                   ))}
                 </div>
-
                 <input
                   type="text"
-                  className="w-full mt-2 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500"
+                  className="w-full mt-2 p-3 border border-gray-300 rounded-md"
                   placeholder="Or enter custom account type..."
                   value={customCategory}
                   onChange={(e) => {
@@ -177,9 +171,27 @@ const AddAccountModal = ({ modalOpen, setModalOpen, setAccounts }) => {
                     setSelectedCategory('');
                   }}
                 />
+
+                <p className="text-sm font-medium text-gray-600 mt-4">
+                  Account Category
+                </p>
+                <div className="flex gap-2">
+                  {accountTypes.map((type) => (
+                    <button
+                      key={type}
+                      className={`px-4 py-2 rounded-md text-sm font-medium ${
+                        accType === type
+                          ? 'bg-blue-500 text-white'
+                          : 'bg-gray-100 text-gray-700'
+                      }`}
+                      onClick={() => setAccType(type)}
+                    >
+                      {type}
+                    </button>
+                  ))}
+                </div>
               </motion.div>
             )}
-
             {/* Step 2: Financial Details */}
             {step === 2 && (
               <motion.div

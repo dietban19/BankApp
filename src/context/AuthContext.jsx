@@ -67,6 +67,7 @@ export const AuthProvider = ({ children }) => {
             type: 'Chequing',
             currency: 'CAD',
             createdAt, // Store the creation date
+            main: true,
           });
 
           // Update the document with its own ID

@@ -22,47 +22,49 @@ const SlideUpModal = ({
         <>
           {/* Backdrop */}
           <motion.div
-            className="fixed inset-0 bg-black/50 bg-opacity-50 z-[101]"
+            className="fixed inset-0 bg-black/50 bg-opacity-50 z-[101] flex justify-center items-center"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose} // Close when clicking outside
-          />
-
-          {/* Modal */}
-          <motion.div
-            className="fixed bottom-0 left-0 right-0 bg-white h-[100%]  p-6 rounded-t-2xl shadow-lg z-[102] max-w-md mx-auto"
-            initial={{ y: '100%' }}
-            animate={{ y: 0 }}
-            exit={{ y: '100%' }}
-            transition={{ type: 'spring', stiffness: 100, damping: 15 }}
           >
-            {/* Close Button */}
-            <button
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 "
-              onClick={onClose}
+            {/* Modal */}
+            <motion.div
+              className=" h-[95%] bg-white  rounded-2xl fixed bottom-0  w-full p-4"
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', stiffness: 100, damping: 15 }}
             >
-              <X size={24} />
-            </button>
+              {/* Close Button */}
+              <button
+                className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 "
+                onClick={onClose}
+              >
+                <X size={24} />
+              </button>
 
-            {/* Modal Content */}
-            <h2 className="text-lg font-semibold text-gray-800 ">
-              {transferType} Account
-            </h2>
-            <ul className=" flex flex-col gap-2 ">
-              {accounts.map((account, ind) => (
-                <li
-                  key={ind}
-                  className="p-5 border-b-[0.5px] flex flex-col gap-2"
-                  onClick={() => handleChooseAccount(account, ind)}
-                >
-                  <div className="">{account.name}</div>
-                  <div className="text-sm text-green-700">
-                    ${account.balance.toFixed(2)}
-                  </div>
-                </li>
-              ))}
-            </ul>
+              {/* Modal Content */}
+              <h2 className="text-lg font-semibold text-gray-800 ">
+                {transferType} Account
+              </h2>
+              <div className=" h-[95%] overflow-scroll ">
+                <ul className=" flex flex-col gap-2 ">
+                  {accounts.map((account, ind) => (
+                    <li
+                      key={ind}
+                      className="p-5 border-b-[0.5px] flex flex-col gap-2"
+                      onClick={() => handleChooseAccount(account, ind)}
+                    >
+                      <div className="">{account.name}</div>
+                      <div className="text-sm text-green-700">
+                        ${account.balance.toFixed(2)}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </motion.div>
           </motion.div>
         </>
       )}

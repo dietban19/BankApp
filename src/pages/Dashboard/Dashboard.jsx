@@ -6,6 +6,7 @@ import { collection, query, getDocs, addDoc } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import { useAuth } from '../../context/AuthContext';
 import BankingButtons from './components/Buttons';
+import Tabs from '../../components/Tabs';
 
 function Dashboard() {
   const { currentUser, accounts, setAccounts, total, setTotal, loading } =
@@ -31,6 +32,7 @@ function Dashboard() {
           setTotal={setTotal}
         />
       </div>
+      <Tabs />
     </div>
   );
 }
